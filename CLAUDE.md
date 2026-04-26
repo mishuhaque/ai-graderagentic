@@ -167,6 +167,90 @@ Copy `.env.example` to `.env` and set:
 - **E2E live Claude:** `backend/tests/e2e/` (gated by `RUN_LIVE_E2E=1`; verifies cache hit rates)
 - **Frontend E2E:** `frontend/tests/e2e/` (Playwright; happy-path register → grade → download)
 
+## Git Workflow & Commits
+
+**Critical:** Commit and push work frequently to preserve progress and avoid losing code.
+
+### Commit Discipline
+
+After completing any task or phase:
+
+1. **Check status** before committing:
+   ```bash
+   git status
+   git diff
+   ```
+
+2. **Stage relevant files** (avoid `git add .` which can accidentally commit secrets):
+   ```bash
+   git add backend/src/ai_grader/file.py frontend/src/component.tsx
+   ```
+
+3. **Write clear commit messages** (imperative form, explain WHY not WHAT):
+   ```bash
+   git commit -m "Implement Class CRUD endpoints for Phase 2
+
+   - Add Class SQLAlchemy model with faculty_id foreign key
+   - Create POST/GET/PUT/DELETE routes in api/classes.py
+   - Add database migration 002_add_classes_table.py
+   - Tested with FastAPI TestClient
+
+   Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+   "
+   ```
+
+4. **Push immediately after commit**:
+   ```bash
+   git push origin main
+   ```
+
+### Commit Template
+
+Use this pattern for consistency:
+```
+<Short title describing the change (imperative, ~50 chars)>
+
+<Blank line>
+
+<Optional longer explanation of WHY this change was made, what problem it solves>
+
+<Blank line>
+
+<Bullet points for implementation details if needed>
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+```
+
+### What to Commit
+
+✅ **DO commit:**
+- Code changes (Python, TypeScript, SQL)
+- New database migrations
+- Config files (non-secret)
+- Documentation updates
+- Test files
+
+❌ **DON'T commit:**
+- `.env` (contains API keys) — only `.env.example`
+- `node_modules/`, `__pycache__/`, `.pytest_cache/`
+- IDE settings (`.vscode/`, `.idea/`) — gitignored
+- Generated artifacts (`dist/`, `build/`)
+
+### GitHub Repository
+
+**URL:** https://github.com/mishuhaque/ai-graderagentic
+
+Clone locally:
+```bash
+git clone https://github.com/mishuhaque/ai-graderagentic.git
+cd ai-graderagentic
+```
+
+After each phase or feature:
+1. Commit with clear message
+2. `git push origin main`
+3. Verify on GitHub that commit appears
+
 ## Notes for Future Work
 
 - **Phase 2 blocker:** Rubric editor UI (allows faculty to define criteria JSON). Consider form library (react-hook-form + zod already in stack).
