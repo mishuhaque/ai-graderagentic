@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ai-grader-db
+    environment:
+      POSTGRES_USER: ai_grader
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ai_grader_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_grader"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ai-grader-api
+    command: uvicorn ai_grader.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/src:/app/src
+      - ./storage:/app/storage
+    environment:
+      DATABASE_URL: postgresql+asyncpg://ai_grader:password@db:5432/ai_grader_db
+      JWT_SECRET: test-secret-key
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      ENVIRONMENT: development
+      DEBUG: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ai-grader-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    environment:
+      VITE_API_URL: http://localhost:8000
+    command: npm run dev
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: ai-grader-network
