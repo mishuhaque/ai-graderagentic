@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
@@ -14,7 +14,7 @@ from ai_grader.domain.user import User
 from ai_grader.config import settings
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 class UserRegisterRequest(BaseModel):
@@ -143,20 +143,17 @@ async def login(req: UserLoginRequest, db: AsyncSession = Depends(get_db)):
 
 
 @app.get("/me", response_model=UserResponse)
-async def get_me(db: AsyncSession = Depends(get_db)):
-    from fastapi import Header
-    auth = Header(None, alias="Authorization")
+async def get_me(authorization: str = Header(None), db: AsyncSession = Depends(get_db)):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
-    async def get_user_from_header(authorization: str = Header(None)):
-        if not authorization:
-            raise HTTPException(status_code=401, detail="Not authenticated")
-        parts = authorization.split()
-        if len(parts) != 2 or parts[0] != "Bearer":
-            raise HTTPException(status_code=401, detail="Invalid auth header")
-        token = parts[1]
-        return await get_current_user(token, db)
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid auth header")
 
-    user = await get_user_from_header()
+    token = parts[1]
+    user = await get_current_user(token, db)
+
     return UserResponse(
         id=str(user.id),
         email=user.email,

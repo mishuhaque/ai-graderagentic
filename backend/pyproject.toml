@@ -18,7 +18,7 @@ dependencies = [
     "asyncpg>=0.29",
 
     # Auth
-    "passlib[bcrypt]>=1.7",
+    "passlib[argon2]>=1.7",
     "pyjwt>=2.8",
     "python-multipart>=0.0.6",
 
