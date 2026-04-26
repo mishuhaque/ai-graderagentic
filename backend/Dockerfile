@@ -12,6 +12,9 @@ RUN apt-get update && apt-get install -y \
 COPY pyproject.toml .
 RUN pip install --no-cache-dir -e .
 
+# Set PYTHONPATH so modules can be found
+ENV PYTHONPATH=/app/src:$PYTHONPATH
+
 # Copy application code
 COPY src /app/src
 COPY alembic.ini .

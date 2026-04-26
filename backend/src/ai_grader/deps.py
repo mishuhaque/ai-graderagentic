@@ -1,6 +1,5 @@
 from fastapi_users import FastAPIUsers
-from fastapi_users.authentication import JWTStrategy, AuthenticationBackend
-from fastapi_users.authentication.transport import BearerTransport
+from fastapi_users.authentication import JWTStrategy
 import uuid
 
 from ai_grader.config import settings
@@ -11,17 +10,9 @@ jwt_strategy = JWTStrategy(
     lifetime_seconds=settings.jwt_expiration_hours * 3600,
 )
 
-bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
-
-auth_backend = AuthenticationBackend(
-    name="jwt",
-    transport=bearer_transport,
-    strategy=jwt_strategy,
-)
-
 fastapi_users = FastAPIUsers[User, uuid.UUID](
     get_user_db,
-    [auth_backend],
+    [jwt_strategy],
 )
 
 current_active_user = fastapi_users.current_user(active=True)
