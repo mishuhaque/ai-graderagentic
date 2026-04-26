@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy import Column, String, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 
-from ai_grader.database import Base
+from ai_grader.database import Base, async_session_maker
 
 
 class User(Base):
@@ -19,7 +19,7 @@ class User(Base):
 
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
-    full_name: str | None
+    full_name: str | None = None
 
 
 class UserCreate(schemas.BaseUserCreate):
@@ -30,7 +30,6 @@ class UserUpdate(schemas.BaseUserUpdate):
     full_name: str | None = None
 
 
-async def get_user_db(session):
-    from ai_grader.database import async_session_maker
-    async with async_session_maker() as db:
-        yield SQLAlchemyUserDatabase(User, db)
+async def get_user_db():
+    async with async_session_maker() as session:
+        yield SQLAlchemyUserDatabase(session, User)
